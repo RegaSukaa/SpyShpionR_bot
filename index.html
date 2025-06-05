@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпион - Игра в шпионов</title>
+    <style>
+        :root {
+            --primary: #2481cc;
+            --primary-dark: #1a6cb3;
+            --secondary: #f0f0f0;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ffffff;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e5799 0%, #207cca 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .screen {
+            background: var(--light);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .active {
+            display: flex;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        h2 {
+            font-size: 22px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        h3 {
+            font-size: 18px;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+            color: #555;
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--radius);
+            font-size: 16px;
+            transition: var(--transition);
+        }
+        
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .player-tag {
+            background: var(--secondary);
+            border-radius: 50px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        
+        .remove-player {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .counter {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: var(--secondary);
+            padding: 15px;
+            border-radius: var(--radius);
+        }
+        
+        .counter-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .counter-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .counter-value {
+            font-size: 24px;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            perspective: 1000px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        
+        .card-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .card-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .spy-text {
+            color: #ff4d4d;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .spy-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .location-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            background: var(--secondary);
+            border-radius: var(--radius);
+            padding: 15px;
+        }
+        
+        .location-item {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            font-size: 16px;
+        }
+        
+        .location-item:last-child {
+            border-bottom: none;
+        }
+        
+        .voting-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .player-vote-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--secondary);
+            border-radius: var(--radius);
+            padding: 15px;
+        }
+        
+        .vote-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .result-screen {
+            text-align: center;
+        }
+        
+        .result-icon {
+            font-size: 64px;
+            margin: 20px 0;
+        }
+        
+        .footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 20px 0;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+        
+        .bug-report {
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .bug-report:hover {
+            text-decoration: underline;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+        
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            position: relative;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+        
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        
+        .instruction {
+            background: #f9f9f9;
+            border-left: 4px solid var(--primary);
+            padding: 12px 15px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Главный экран -->
+        <div id="main-screen" class="screen active">
+            <div class="header">
+                <h1>🕵️ Шпион</h1>
+                <p>Увлекательная игра на логику и общение</p>
+            </div>
+            
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Crect fill='%232481cc' width='400' height='200'/%3E%3Ccircle fill='%23f0f0f0' cx='200' cy='100' r='60'/%3E%3Cpath fill='%232c3e50' d='M180,90 Q200,70 220,90 Q210,100 220,110 Q200,130 180,110 Q190,100 180,90'/%3E%3C/svg%3E" alt="Spy Game" style="width: 100%; border-radius: var(--radius); margin: 15px 0;">
+            
+            <div class="instruction">
+                <p><strong>Как играть:</strong></p>
+                <p>1. Добавьте игроков и выберите количество шпионов</p>
+                <p>2. Каждый игрок по очереди смотрит свою роль</p>
+                <p>3. Мирные игроки знают локацию, шпионы - нет</p>
+                <p>4. Обсуждайте и выявляйте шпионов!</p>
+            </div>
+            
+            <button id="new-game-btn" class="btn">
+                🎮 Начать новую игру
+            </button>
+        </div>
+        
+        <!-- Экран настройки -->
+        <div id="setup-screen" class="screen">
+            <div class="header">
+                <h2>Настройка игры</h2>
+                <p>Добавьте игроков и выберите количество шпионов</p>
+            </div>
+            
+            <div>
+                <h3>Добавить игрока</h3>
+                <div class="input-group">
+                    <input type="text" id="player-name" placeholder="Имя игрока">
+                    <button id="add-player-btn" class="btn btn-small">Добавить</button>
+                </div>
+                
+                <div id="players-container">
+                    <h3>Игроки:</h3>
+                    <div id="player-list" class="player-list"></div>
+                </div>
+            </div>
+            
+            <div>
+                <h3>Количество шпионов:</h3>
+                <div class="counter">
+                    <button id="spy-minus" class="counter-btn">-</button>
+                    <div id="spy-count" class="counter-value">1</div>
+                    <button id="spy-plus" class="counter-btn">+</button>
+                </div>
+            </div>
+            
+            <button id="view-locations-btn" class="btn btn-secondary">
+                📋 Посмотреть возможные локации
+            </button>
+            
+            <button id="start-game-btn" class="btn btn-success" disabled>
+                🚀 Начать игру
+            </button>
+            
+            <button id="back-to-main-btn" class="btn btn-secondary">
+                ↩️ На главную
+            </button>
+        </div>
+        
+        <!-- Экран игры -->
+        <div id="game-screen" class="screen">
+            <div class="header">
+                <h2>Ход игрока</h2>
+                <p>Передайте устройство игроку</p>
+            </div>
+            
+            <div class="progress-bar">
+                <div id="progress" class="progress" style="width: 0%"></div>
+            </div>
+            
+            <h3 id="current-player">Игрок 1</h3>
+            
+            <div id="game-card" class="card">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="card-title">Ваша роль</div>
+                        <div class="card-text">Нажмите на карту, чтобы узнать, кто вы - мирный житель или шпион</div>
+                        <div class="spy-icon">🕵️</div>
+                        <div class="card-text">После просмотра нажмите снова, чтобы передать ход</div>
+                    </div>
+                    <div class="card-back">
+                        <div id="role-content">
+                            <!-- Контент роли будет здесь -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="next-player-btn" class="btn" style="display: none;">
+                👉 Передать следующему игроку
+            </button>
+            
+            <button id="back-to-setup-btn" class="btn btn-secondary">
+                ↩️ Вернуться к настройкам
+            </button>
+        </div>
+        
+        <!-- Экран голосования -->
+        <div id="voting-screen" class="screen">
+            <div class="header">
+                <h2>Обсуждение завершено</h2>
+                <p>Выберите игрока, которого подозреваете в шпионаже</p>
+            </div>
+            
+            <div id="voting-container">
+                <h3>Игроки:</h3>
+                <div id="voting-list" class="voting-list">
+                    <!-- Список игроков для голосования будет здесь -->
+                </div>
+            </div>
+            
+            <button id="back-to-game-btn" class="btn btn-secondary" style="display: none;">
+                ↩️ Вернуться к обсуждению
+            </button>
+        </div>
+        
+        <!-- Экран результатов -->
+        <div id="result-screen" class="screen">
+            <div class="header result-screen">
+                <h2 id="result-title">Результат голосования</h2>
+                <p id="result-description">Описание результата</p>
+            </div>
+            
+            <div id="result-content">
+                <!-- Контент результатов будет здесь -->
+            </div>
+            
+            <div id="game-result"></div>
+            
+            <button id="play-again-btn" class="btn btn-success">
+                🔄 Играть снова
+            </button>
+            
+            <button id="back-to-main-result-btn" class="btn btn-secondary">
+                ↩️ На главную
+            </button>
+        </div>
+    </div>
+    
+    <!-- Модальное окно локаций -->
+    <div id="locations-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <h2>Возможные локации</h2>
+            <p>Одна из этих локаций будет выбрана случайным образом</p>
+            
+            <div id="locations-list" class="location-list">
+                <!-- Список локаций будет здесь -->
+            </div>
+            
+            <button class="btn close-modal-btn">Закрыть</button>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Шпион - Игра для веселой компании</p>
+        <a href="https://t.me/Pluh5" class="bug-report" target="_blank">
+            <span>Нашёл баг? Сообщить</span>
+        </a>
+    </div>
+
+    <script>
+        // Данные игры
+        const locations = [
+            "Казино", "Кладбище", "Круизный лайнер", "Самолёт", "Отель",
+            "Забегаловка", "Ресторан", "Тренажерный Зал", "Космическая Станция", "Стадион",
+            "Стройплощадка", "Тюрьма", "Выставка кошек", "Пиратский корабль", "Торговый центр",
+            "Бассейн", "Кинотеатр", "Киностудия", "Церковь", "Ночной Клуб",
+            "Спа-салон", "Школа", "Полицейский участок", "Подводная лодка", "Цирк",
+            "Лунапарк", "Посольство", "Карнавал", "Пляж", "Воинская часть",
+            "Университет", "Больница", "Театр", "Зоопарк", "Пассажирский Поезд",
+            "Корпоративная вечеринка", "Шахта", "Рок-концерт", "Библиотека", "Свадьба", "Парламент"
+        ];
+        
+        // Состояние игры
+        const gameState = {
+            players: [],
+            spiesCount: 1,
+            currentLocation: "",
+            currentPlayerIndex: 0,
+            roles: {},
+            gameStarted: false,
+            votedPlayers: new Set()
+        };
+        
+        // Элементы DOM
+        const screens = {
+            main: document.getElementById('main-screen'),
+            setup: document.getElementById('setup-screen'),
+            game: document.getElementById('game-screen'),
+            voting: document.getElementById('voting-screen'),
+            result: document.getElementById('result-screen')
+        };
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            // Наполнение списка локаций
+            const locationsList = document.getElementById('locations-list');
+            locations.forEach(location => {
+                const locationItem = document.createElement('div');
+                locationItem.className = 'location-item';
+                locationItem.textContent = location;
+                locationsList.appendChild(locationItem);
+            });
+            
+            // Инициализация обработчиков событий
+            initEventListeners();
+        });
+        
+        // Обработчики событий
+        function initEventListeners() {
+            // Навигация
+            document.getElementById('new-game-btn').addEventListener('click', () => showScreen('setup'));
+            document.getElementById('back-to-main-btn').addEventListener('click', () => showScreen('main'));
+            document.getElementById('back-to-main-result-btn').addEventListener('click', () => showScreen('main'));
+            document.getElementById('back-to-setup-btn').addEventListener('click', () => showScreen('setup'));
+            
+            // Управление игроками
+            document.getElementById('add-player-btn').addEventListener('click', addPlayer);
+            document.getElementById('player-name').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addPlayer();
+            });
+            
+            // Управление шпионами
+            document.getElementById('spy-plus').addEventListener('click', () => updateSpyCount(1));
+            document.getElementById('spy-minus').addEventListener('click', () => updateSpyCount(-1));
+            
+            // Просмотр локаций
+            document.getElementById('view-locations-btn').addEventListener('click', () => {
+                document.getElementById('locations-modal').classList.add('active');
+            });
+            
+            // Закрытие модального окна
+            document.querySelector('.close-modal').addEventListener('click', closeModal);
+            document.querySelector('.close-modal-btn').addEventListener('click', closeModal);
+            
+            // Начало игры
+            document.getElementById('start-game-btn').addEventListener('click', startGame);
+            
+            // Игровой процесс
+            document.getElementById('game-card').addEventListener('click', flipCard);
+            document.getElementById('next-player-btn').addEventListener('click', nextPlayer);
+            
+            // Голосование
+            document.getElementById('play-again-btn').addEventListener('click', resetGame);
+        }
+        
+        // Функции игры
+        function addPlayer() {
+            const nameInput = document.getElementById('player-name');
+            const name = nameInput.value.trim();
+            
+            if (name && !gameState.players.includes(name)) {
+                gameState.players.push(name);
+                renderPlayerList();
+                nameInput.value = '';
+                nameInput.focus();
+                
+                // Активируем кнопку "Начать игру" если есть игроки
+                document.getElementById('start-game-btn').disabled = gameState.players.length < 2;
+            }
+        }
+        
+        function removePlayer(name) {
+            gameState.players = gameState.players.filter(player => player !== name);
+            renderPlayerList();
+            
+            // Деактивируем кнопку "Начать игру" если меньше 2 игроков
+            document.getElementById('start-game-btn').disabled = gameState.players.length < 2;
+        }
+        
+        function renderPlayerList() {
+            const playerList = document.getElementById('player-list');
+            playerList.innerHTML = '';
+            
+            gameState.players.forEach(player => {
+                const playerTag = document.createElement('div');
+                playerTag.className = 'player-tag';
+                playerTag.innerHTML = `
+                    <span>${player}</span>
+                    <button class="remove-player" onclick="removePlayer('${player}')">×</button>
+                `;
+                playerList.appendChild(playerTag);
+            });
+        }
+        
+        function updateSpyCount(change) {
+            let newCount = gameState.spiesCount + change;
+            
+            // Ограничения: минимум 1 шпион, максимум половина игроков (но не менее 1)
+            const maxSpies = Math.max(1, Math.floor(gameState.players.length / 2));
+            newCount = Math.max(1, Math.min(maxSpies, newCount));
+            
+            gameState.spiesCount = newCount;
+            document.getElementById('spy-count').textContent = newCount;
+        }
+        
+        function closeModal() {
+            document.getElementById('locations-modal').classList.remove('active');
+        }
+        
+        function startGame() {
+            if (gameState.players.length < 2) {
+                alert('Добавьте минимум двух игроков!');
+                return;
+            }
+            
+            // Выбор случайной локации
+            gameState.currentLocation = locations[Math.floor(Math.random() * locations.length)];
+            
+            // Распределение ролей
+            gameState.roles = {};
+            const spyIndexes = [];
+            
+            // Выбираем случайных шпионов
+            while (spyIndexes.length < gameState.spiesCount) {
+                const randomIndex = Math.floor(Math.random() * gameState.players.length);
+                if (!spyIndexes.includes(randomIndex)) {
+                    spyIndexes.push(randomIndex);
+                }
+            }
+            
+            // Назначаем роли
+            gameState.players.forEach((player, index) => {
+                gameState.roles[player] = spyIndexes.includes(index) ? 'spy' : 'citizen';
+            });
+            
+            gameState.currentPlayerIndex = 0;
+            gameState.gameStarted = true;
+            gameState.votedPlayers.clear();
+            
+            showScreen('game');
+            updateGameScreen();
+        }
+        
+        function updateGameScreen() {
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            document.getElementById('current-player').textContent = currentPlayer;
+            
+            // Обновление прогресс-бара
+            const progressPercent = (gameState.currentPlayerIndex / gameState.players.length) * 100;
+            document.getElementById('progress').style.width = `${progressPercent}%`;
+            
+            // Скрыть кнопку "Передать следующему"
+            document.getElementById('next-player-btn').style.display = 'none';
+            
+            // Сбросить карту
+            const card = document.getElementById('game-card');
+            card.classList.remove('flipped');
+            
+            // Установить контент для роли
+            const roleContent = document.getElementById('role-content');
+            if (gameState.roles[currentPlayer] === 'spy') {
+                roleContent.innerHTML = `
+                    <div class="spy-icon">🕵️</div>
+                    <div class="spy-text">ТЫ ШПИОН!</div>
+                    <div class="card-text">Ты не знаешь локацию. Выдавай себя за мирного!</div>
+                `;
+            } else {
+                roleContent.innerHTML = `
+                    <div class="card-title">${gameState.currentLocation}</div>
+                    <div class="card-text">Ты мирный житель. Найди шпиона!</div>
+                    <div class="card-text">Запомни локацию и не выдавай её напрямую.</div>
+                `;
+            }
+        }
+        
+        function flipCard() {
+            const card = document.getElementById('game-card');
+            card.classList.add('flipped');
+            
+            // Показать кнопку "Передать следующему"
+            document.getElementById('next-player-btn').style.display = 'block';
+        }
+        
+        function nextPlayer() {
+            gameState.currentPlayerIndex++;
+            
+            if (gameState.currentPlayerIndex >= gameState.players.length) {
+                // Все игроки посмотрели свои роли
+                showVotingScreen();
+            } else {
+                updateGameScreen();
+            }
+        }
+        
+        function showVotingScreen() {
+            const votingList = document.getElementById('voting-list');
+            votingList.innerHTML = '';
+            
+            gameState.players.forEach(player => {
+                const playerItem = document.createElement('div');
+                playerItem.className = 'player-vote-item';
+                playerItem.innerHTML = `
+                    <span>${player}</span>
+                    <div class="vote-buttons">
+                        <button class="btn btn-small btn-danger" data-player="${player}">Выгнать</button>
+                    </div>
+                `;
+                votingList.appendChild(playerItem);
+            });
+            
+            // Добавляем обработчики для кнопок голосования
+            document.querySelectorAll('.btn-danger').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const player = e.target.getAttribute('data-player');
+                    votePlayerOut(player);
+                });
+            });
+            
+            showScreen('voting');
+        }
+        
+        function votePlayerOut(player) {
+            if (gameState.votedPlayers.has(player)) return;
+            
+            gameState.votedPlayers.add(player);
+            
+            const isSpy = gameState.roles[player] === 'spy';
+            const remainingSpies = Object.values(gameState.roles).filter(role => role === 'spy' && !gameState.votedPlayers.has(player)).length;
+            
+            // Обновляем состояние игры
+            gameState.roles[player] = 'voted-out';
+            
+            // Показываем результат голосования
+            showResultScreen(player, isSpy, remainingSpies);
+        }
+        
+        function showResultScreen(player, isSpy, remainingSpies) {
+            const resultTitle = document.getElementById('result-title');
+            const resultDescription = document.getElementById('result-description');
+            const resultContent = document.getElementById('result-content');
+            const gameResult = document.getElementById('game-result');
+            
+            if (isSpy) {
+                resultTitle.textContent = `Шпион обнаружен!`;
+                resultDescription.textContent = `${player} был шпионом!`;
+                resultContent.innerHTML = `
+                    <div class="result-icon">🕵️</div>
+                    <h3>${player} - Шпион</h3>
+                    <p>Игроки вычислили шпиона!</p>
+                `;
+                
+                if (remainingSpies === 0) {
+                    gameResult.innerHTML = `
+                        <div class="instruction" style="background: #d4edda; border-color: #28a745;">
+                            <h3>🎉 Победа мирных жителей!</h3>
+                            <p>Все шпионы найдены! Мирные жители победили!</p>
+                        </div>
+                    `;
+                } else {
+                    gameResult.innerHTML = `
+                        <div class="instruction">
+                            <h3>Игра продолжается!</h3>
+                            <p>Осталось шпионов: ${remainingSpies}</p>
+                            <p>Продолжайте обсуждение и ищите оставшихся шпионов</p>
+                        </div>
+                    `;
+                    
+                    // Кнопка возврата к голосованию
+                    const backButton = document.getElementById('back-to-game-btn');
+                    backButton.style.display = 'block';
+                    backButton.addEventListener('click', () => {
+                        showScreen('voting');
+                        document.getElementById('back-to-game-btn').style.display = 'none';
+                    });
+                }
+            } else {
+                resultTitle.textContent = `Ошибка!`;
+                resultDescription.textContent = `${player} был мирным жителем!`;
+                resultContent.innerHTML = `
+                    <div class="result-icon">😢</div>
+                    <h3>${player} - Мирный житель</h3>
+                    <p>Игроки ошиблись и выгнали невиновного!</p>
+                `;
+                
+                gameResult.innerHTML = `
+                    <div class="instruction" style="background: #f8d7da; border-color: #dc3545;">
+                        <h3>💥 Шпионы победили!</h3>
+                        <p>Поскольку мирный житель был изгнан, шпионы одержали победу!</p>
+                    </div>
+                `;
+            }
+            
+            showScreen('result');
+        }
+        
+        function resetGame() {
+            gameState.players = [];
+            gameState.spiesCount = 1;
+            gameState.currentLocation = "";
+            gameState.currentPlayerIndex = 0;
+            gameState.roles = {};
+            gameState.gameStarted = false;
+            gameState.votedPlayers.clear();
+            
+            // Сброс UI
+            document.getElementById('player-list').innerHTML = '';
+            document.getElementById('spy-count').textContent = '1';
+            document.getElementById('player-name').value = '';
+            document.getElementById('start-game-btn').disabled = true;
+            document.getElementById('next-player-btn').style.display = 'none';
+            document.getElementById('back-to-game-btn').style.display = 'none';
+            
+            showScreen('setup');
+        }
+        
+        function showScreen(screenName) {
+            // Скрыть все экраны
+            Object.values(screens).forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Показать запрошенный экран
+            screens[screenName].classList.add('active');
+            
+            // Закрыть модальное окно при переключении экранов
+            closeModal();
+        }
+    </script>
+</body>
+</html>

@@ -317,7 +317,7 @@
             background: var(--card-gradient);
             color: white;
             border-radius: var(--radius);
-            padding: 30px;
+            padding: 30px 20px;
             text-align: center;
             min-height: 320px;
             display: flex;
@@ -377,7 +377,7 @@
         }
         
         .card-title {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             margin-bottom: 15px;
         }
@@ -391,7 +391,7 @@
         
         .spy-text {
             color: #ffccd5;
-            font-size: 36px;
+            font-size: 32px;
             font-weight: bold;
             text-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
             animation: pulse 2s infinite;
@@ -404,7 +404,7 @@
         }
         
         .spy-icon {
-            font-size: 64px;
+            font-size: 48px;
             margin-bottom: 20px;
             animation: float 3s ease-in-out infinite;
         }
@@ -718,6 +718,31 @@
             font-weight: bold;
         }
         
+        .rules-container {
+            background: #f0f9ff;
+            border-radius: var(--radius);
+            padding: 15px;
+            margin: 15px 0;
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.5s ease, padding 0.5s ease;
+        }
+        
+        .rules-container.expanded {
+            max-height: 500px;
+            padding: 20px;
+        }
+        
+        .rules-list {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .rules-list li {
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
         @media (max-width: 480px) {
             .input-group {
                 flex-direction: column;
@@ -742,6 +767,15 @@
             h1 {
                 font-size: 28px;
             }
+            
+            .card-title {
+                font-size: 22px;
+                margin-top: 15px;
+            }
+            
+            .card-text {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -760,12 +794,19 @@
                 <p>Увлекательная игра на логику и общение для компании</p>
             </div>
             
-            <div class="instruction">
-                <p><strong>Как играть:</strong></p>
-                <p>1. Добавьте игроков и выберите количество шпионов</p>
-                <p>2. Каждый игрок по очереди смотрит свою роль</p>
-                <p>3. Мирные игроки знают локацию, шпионы - нет</p>
-                <p>4. Обсуждайте и выявляйте шпионов!</p>
+            <button id="rules-btn" class="btn btn-secondary">
+                <i class="fas fa-book"></i> Узнать правила
+            </button>
+            
+            <div class="rules-container" id="rules-container">
+                <h3><i class="fas fa-list"></i> Правила игры:</h3>
+                <ol class="rules-list">
+                    <li>Добавьте игроков и выберите количество шпионов</li>
+                    <li>Каждый игрок по очереди смотрит свою роль</li>
+                    <li>Мирные игроки знают локацию, шпионы - нет</li>
+                    <li>Игроки задают друг другу вопросы, чтобы выяснить кто шпион, а шпионы пытаются не выдать себя и узнать локацию</li>
+                    <li>Если мирные игроки выдвигают предположения на шпиона они нажимают на кнопку выгнать и тогда становиться известно кем был игрок. Шпионы должны раньше чем их обнаружат выведать локацию</li>
+                </ol>
             </div>
             
             <div class="features">
@@ -875,11 +916,14 @@
                         <div id="role-content">
                             <!-- Контент роли будет здесь -->
                         </div>
+                        <div id="flip-back-instruction" class="card-text" style="display: none; margin-top: 20px;">
+                            <i class="fas fa-undo"></i> Переверните карту обратно, чтобы передать ход
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <button id="next-player-btn" class="btn" style="display: none;">
+            <button id="next-player-btn" class="btn btn-disabled" style="display: none;">
                 <i class="fas fa-arrow-right"></i> Передать следующему игроку
             </button>
             
@@ -997,7 +1041,8 @@
             gameStarted: false,
             votedPlayers: {},
             spies: [],
-            remainingSpies: 0
+            remainingSpies: 0,
+            cardFlipped: false
         };
         
         // Элементы DOM
@@ -1069,6 +1114,9 @@
             // Пресеты
             document.getElementById('save-preset-btn').addEventListener('click', savePreset);
             document.getElementById('load-preset-btn').addEventListener('click', showPresetsModal);
+            
+            // Правила
+            document.getElementById('rules-btn').addEventListener('click', toggleRules);
         }
         
         // Функции игры
@@ -1172,6 +1220,7 @@
             
             gameState.currentPlayerIndex = 0;
             gameState.gameStarted = true;
+            gameState.cardFlipped = false;
             
             showScreen('game');
             updateGameScreen();
@@ -1187,11 +1236,16 @@
             
             // Скрыть кнопку "Передать следующему"
             document.getElementById('next-player-btn').style.display = 'none';
+            document.getElementById('next-player-btn').classList.add('btn-disabled');
             
             // Сбросить карту
             const card = document.getElementById('game-card');
             card.classList.remove('flipped');
             card.classList.remove('spy');
+            gameState.cardFlipped = false;
+            
+            // Скрыть инструкцию о перевороте
+            document.getElementById('flip-back-instruction').style.display = 'none';
             
             // Установить контент для роли
             const roleContent = document.getElementById('role-content');
@@ -1215,16 +1269,41 @@
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             const isSpy = gameState.roles[currentPlayer] === 'spy';
             
-            card.classList.add('flipped');
-            if (isSpy) {
-                card.classList.add('spy');
+            if (!gameState.cardFlipped) {
+                // Первый клик - показать роль
+                card.classList.add('flipped');
+                if (isSpy) {
+                    card.classList.add('spy');
+                }
+                
+                // Показать кнопку "Передать следующему" (но неактивную)
+                document.getElementById('next-player-btn').style.display = 'block';
+                document.getElementById('next-player-btn').classList.add('btn-disabled');
+                
+                // Показать инструкцию о перевороте
+                document.getElementById('flip-back-instruction').style.display = 'block';
+                
+                gameState.cardFlipped = true;
+            } else {
+                // Второй клик - скрыть роль
+                card.classList.remove('flipped');
+                
+                // Скрыть инструкцию о перевороте
+                document.getElementById('flip-back-instruction').style.display = 'none';
+                
+                // Активировать кнопку "Передать следующему"
+                document.getElementById('next-player-btn').classList.remove('btn-disabled');
+                
+                gameState.cardFlipped = false;
             }
-            
-            // Показать кнопку "Передать следующему"
-            document.getElementById('next-player-btn').style.display = 'block';
         }
         
         function nextPlayer() {
+            if (gameState.cardFlipped) {
+                alert('Переверните карту обратно перед передачей хода!');
+                return;
+            }
+            
             gameState.currentPlayerIndex++;
             
             if (gameState.currentPlayerIndex >= gameState.players.length) {
@@ -1378,6 +1457,7 @@
             gameState.votedPlayers = {};
             gameState.spies = [];
             gameState.remainingSpies = 0;
+            gameState.cardFlipped = false;
             
             // Сброс UI
             document.getElementById('player-list').innerHTML = '';
@@ -1465,6 +1545,18 @@
             document.getElementById('start-game-btn').disabled = gameState.players.length < 2;
             
             alert(`Пресет "${name}" успешно загружен!`);
+        }
+        
+        function toggleRules() {
+            const rulesContainer = document.getElementById('rules-container');
+            rulesContainer.classList.toggle('expanded');
+            
+            const rulesBtn = document.getElementById('rules-btn');
+            if (rulesContainer.classList.contains('expanded')) {
+                rulesBtn.innerHTML = '<i class="fas fa-times"></i> Скрыть правила';
+            } else {
+                rulesBtn.innerHTML = '<i class="fas fa-book"></i> Узнать правила';
+            }
         }
     </script>
 </body>

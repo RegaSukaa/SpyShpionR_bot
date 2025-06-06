@@ -167,12 +167,24 @@
             background: var(--danger);
         }
         
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
         .btn-success {
             background: var(--success);
         }
         
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
         .btn-warning {
             background: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
         }
         
         .btn-secondary {
@@ -188,6 +200,11 @@
             padding: 12px 18px;
             font-size: 15px;
             border-radius: 12px;
+        }
+        
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .input-group {
@@ -444,6 +461,26 @@
             transition: var(--transition);
         }
         
+        .player-vote-item.eliminated {
+            opacity: 0.7;
+            background: #f8f9fa;
+        }
+        
+        .player-vote-item.eliminated .player-name {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        .player-vote-item.eliminated .role-badge {
+            display: inline-block;
+            background: var(--danger);
+            color: white;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        
         .player-vote-item:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -672,6 +709,15 @@
             color: #888;
         }
         
+        .spy-counter {
+            background: #f8d7da;
+            border-radius: var(--radius);
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
         @media (max-width: 480px) {
             .input-group {
                 flex-direction: column;
@@ -776,6 +822,7 @@
                         <button id="spy-plus" class="counter-btn">+</button>
                     </div>
                 </div>
+                <p class="instruction">Можно выбрать любое количество шпионов, но должен остаться хотя бы один мирный житель.</p>
             </div>
             
             <div class="presets-section">
@@ -849,6 +896,9 @@
             </div>
             
             <div id="voting-container">
+                <div id="spy-counter" class="spy-counter">
+                    Осталось шпионов: <span id="remaining-spies">1</span>
+                </div>
                 <h3><i class="fas fa-users"></i> Игроки:</h3>
                 <div id="voting-list" class="voting-list">
                     <!-- Список игроков для голосования будет здесь -->
@@ -863,7 +913,7 @@
         <!-- Экран результатов -->
         <div id="result-screen" class="screen">
             <div class="header result-screen">
-                <h2 id="result-title"><i class="fas fa-trophy"></i> Результат голосования</h2>
+                <h2 id="result-title"><i class="fas fa-trophy"></i> Результат игры</h2>
                 <p id="result-description">Описание результата</p>
             </div>
             
@@ -945,8 +995,9 @@
             currentPlayerIndex: 0,
             roles: {},
             gameStarted: false,
-            votedPlayers: new Set(),
-            spies: []
+            votedPlayers: {},
+            spies: [],
+            remainingSpies: 0
         };
         
         // Элементы DOM
@@ -1068,8 +1119,8 @@
         function updateSpyCount(change) {
             let newCount = gameState.spiesCount + change;
             
-            // Ограничения: минимум 1 шпион, максимум половина игроков (но не менее 1)
-            const maxSpies = Math.max(1, Math.floor(gameState.players.length / 2));
+            // Убрали ограничение на количество шпионов
+            const maxSpies = gameState.players.length - 1; // Должен остаться хотя бы один мирный
             newCount = Math.max(1, Math.min(maxSpies, newCount));
             
             gameState.spiesCount = newCount;
@@ -1087,12 +1138,19 @@
                 return;
             }
             
+            if (gameState.spiesCount >= gameState.players.length) {
+                alert('Должен остаться хотя бы один мирный житель!');
+                return;
+            }
+            
             // Выбор случайной локации
             gameState.currentLocation = locations[Math.floor(Math.random() * locations.length)];
             
             // Распределение ролей
             gameState.roles = {};
             gameState.spies = [];
+            gameState.votedPlayers = {};
+            gameState.remainingSpies = gameState.spiesCount;
             
             // Выбираем случайных шпионов
             while (gameState.spies.length < gameState.spiesCount) {
@@ -1114,7 +1172,6 @@
             
             gameState.currentPlayerIndex = 0;
             gameState.gameStarted = true;
-            gameState.votedPlayers.clear();
             
             showScreen('game');
             updateGameScreen();
@@ -1179,18 +1236,29 @@
         }
         
         function showVotingScreen() {
+            document.getElementById('remaining-spies').textContent = gameState.remainingSpies;
+            
             const votingList = document.getElementById('voting-list');
             votingList.innerHTML = '';
             
             gameState.players.forEach(player => {
+                const isVotedOut = gameState.votedPlayers[player];
                 const playerItem = document.createElement('div');
-                playerItem.className = 'player-vote-item';
+                playerItem.className = `player-vote-item ${isVotedOut ? 'eliminated' : ''}`;
+                
+                let playerName = player;
+                if (isVotedOut) {
+                    playerName += `<span class="role-badge">${gameState.roles[player] === 'spy' ? 'Шпион' : 'Мирный'}</span>`;
+                }
+                
                 playerItem.innerHTML = `
-                    <span><i class="fas fa-user"></i> ${player}</span>
+                    <span class="player-name">${playerName}</span>
                     <div class="vote-buttons">
+                        ${!isVotedOut ? `
                         <button class="btn btn-small btn-danger" data-player="${player}">
                             <i class="fas fa-user-slash"></i> Выгнать
                         </button>
+                        ` : ''}
                     </div>
                 `;
                 votingList.appendChild(playerItem);
@@ -1208,21 +1276,53 @@
         }
         
         function votePlayerOut(player) {
-            if (gameState.votedPlayers.has(player)) return;
+            if (gameState.votedPlayers[player]) return;
             
-            gameState.votedPlayers.add(player);
+            // Помечаем игрока как выгнанного
+            gameState.votedPlayers[player] = true;
             
             const isSpy = gameState.roles[player] === 'spy';
             
             if (isSpy) {
-                // Удаляем шпиона из списка
-                gameState.spies = gameState.spies.filter(spy => spy !== player);
+                // Уменьшаем количество оставшихся шпионов
+                gameState.remainingSpies--;
             }
             
-            const remainingSpies = gameState.spies.length;
+            // Проверяем условия окончания игры
+            checkGameEndConditions(isSpy, player);
+        }
+        
+        function checkGameEndConditions(isSpy, votedPlayer) {
+            // Если выгнали мирного жителя - шпионы побеждают
+            if (!isSpy) {
+                showResultScreen(votedPlayer, false, gameState.remainingSpies);
+                return;
+            }
             
-            // Показываем результат голосования
-            showResultScreen(player, isSpy, remainingSpies);
+            // Если остались шпионы - продолжаем игру
+            if (gameState.remainingSpies > 0) {
+                // Обновляем экран голосования
+                showVotingScreen();
+                
+                // Показываем сообщение о найденном шпионе
+                const resultContent = document.createElement('div');
+                resultContent.innerHTML = `
+                    <div class="instruction" style="background: #d4edda; border-color: #28a745;">
+                        <h3><i class="fas fa-user-secret"></i> Шпион обнаружен!</h3>
+                        <p>${votedPlayer} был шпионом! Но остались ещё шпионы.</p>
+                        <p>Продолжайте обсуждение и ищите оставшихся шпионов.</p>
+                    </div>
+                `;
+                
+                // Показываем сообщение на 3 секунды
+                document.getElementById('voting-container').prepend(resultContent);
+                setTimeout(() => {
+                    resultContent.remove();
+                }, 3000);
+            } else {
+                // Если все шпионы найдены - победа мирных
+                showResultScreen(votedPlayer, true, 0);
+            }
         }
         
         function showResultScreen(player, isSpy, remainingSpies) {
@@ -1231,52 +1331,36 @@
             const resultContent = document.getElementById('result-content');
             const gameResult = document.getElementById('game-result');
             
-            if (isSpy) {
-                resultTitle.textContent = `Шпион обнаружен!`;
-                resultDescription.textContent = `${player} был шпионом!`;
+            if (isSpy && remainingSpies === 0) {
+                // Победа мирных жителей
+                resultTitle.textContent = `Победа мирных жителей!`;
+                resultDescription.textContent = `Все шпионы были обнаружены!`;
                 resultContent.innerHTML = `
-                    <div class="result-icon"><i class="fas fa-user-secret"></i></div>
-                    <h3>${player} - Шпион</h3>
-                    <p>Игроки вычислили шпиона!</p>
+                    <div class="result-icon"><i class="fas fa-trophy"></i></div>
+                    <h3>Игра завершена!</h3>
+                    <p>Мирные жители успешно вычислили всех шпионов и победили!</p>
                 `;
                 
-                if (remainingSpies === 0) {
-                    gameResult.innerHTML = `
-                        <div class="instruction" style="background: #d4edda; border-color: #28a745;">
-                            <h3><i class="fas fa-trophy"></i> Победа мирных жителей!</h3>
-                            <p>Все шпионы найдены! Мирные жители победили!</p>
-                        </div>
-                    `;
-                } else {
-                    gameResult.innerHTML = `
-                        <div class="instruction">
-                            <h3><i class="fas fa-play-circle"></i> Игра продолжается!</h3>
-                            <p>Осталось шпионов: ${remainingSpies}</p>
-                            <p>Продолжайте обсуждение и ищите оставшихся шпионов</p>
-                        </div>
-                    `;
-                    
-                    // Кнопка возврата к голосованию
-                    const backButton = document.getElementById('back-to-game-btn');
-                    backButton.style.display = 'block';
-                    backButton.addEventListener('click', () => {
-                        showScreen('voting');
-                        document.getElementById('back-to-game-btn').style.display = 'none';
-                    });
-                }
-            } else {
-                resultTitle.textContent = `Ошибка!`;
+                gameResult.innerHTML = `
+                    <div class="instruction" style="background: #d4edda; border-color: #28a745;">
+                        <h3>Поздравляем!</h3>
+                        <p>Игроки показали отличную работу в команде и логику.</p>
+                    </div>
+                `;
+            } else if (!isSpy) {
+                // Победа шпионов
+                resultTitle.textContent = `Победа шпионов!`;
                 resultDescription.textContent = `${player} был мирным жителем!`;
                 resultContent.innerHTML = `
-                    <div class="result-icon"><i class="fas fa-user"></i></div>
-                    <h3>${player} - Мирный житель</h3>
-                    <p>Игроки ошиблись и выгнали невиновного!</p>
+                    <div class="result-icon"><i class="fas fa-skull"></i></div>
+                    <h3>Шпионы победили!</h3>
+                    <p>Игроки ошиблись и выгнали невиновного.</p>
                 `;
                 
                 gameResult.innerHTML = `
                     <div class="instruction" style="background: #f8d7da; border-color: #dc3545;">
-                        <h3><i class="fas fa-skull"></i> Шпионы победили!</h3>
-                        <p>Поскольку мирный житель был изгнан, шпионы одержали победу!</p>
+                        <p>Оставшиеся шпионы: ${gameState.spies.filter(spy => !gameState.votedPlayers[spy]).join(', ')}</p>
+                        <p>Локация была: ${gameState.currentLocation}</p>
                     </div>
                 `;
             }
@@ -1291,8 +1375,9 @@
             gameState.currentPlayerIndex = 0;
             gameState.roles = {};
             gameState.gameStarted = false;
-            gameState.votedPlayers.clear();
+            gameState.votedPlayers = {};
             gameState.spies = [];
+            gameState.remainingSpies = 0;
             
             // Сброс UI
             document.getElementById('player-list').innerHTML = '';

@@ -4,18 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Шпион - Игра в шпионов</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #2481cc;
-            --primary-dark: #1a6cb3;
-            --secondary: #f0f0f0;
-            --danger: #e74c3c;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --dark: #2c3e50;
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #f8f9fa;
+            --accent: #7209b7;
+            --danger: #e63946;
+            --success: #2a9d8f;
+            --warning: #f4a261;
+            --dark: #1d3557;
             --light: #ffffff;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --radius: 12px;
+            --card-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            --spy-gradient: linear-gradient(135deg, #e63946 0%, #9d0208 100%);
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            --radius: 16px;
             --transition: all 0.3s ease;
         }
         
@@ -27,13 +31,14 @@
         }
         
         body {
-            background: linear-gradient(135deg, #1e5799 0%, #207cca 100%);
+            background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%);
             color: var(--dark);
             min-height: 100vh;
             padding: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow-x: hidden;
         }
         
         .container {
@@ -54,6 +59,19 @@
             flex-direction: column;
             gap: 20px;
             animation: fadeIn 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .screen::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--primary);
+            z-index: 1;
         }
         
         @keyframes fadeIn {
@@ -68,17 +86,22 @@
         .header {
             text-align: center;
             margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
         }
         
         h1 {
-            font-size: 28px;
-            color: var(--primary);
-            margin-bottom: 5px;
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         h2 {
-            font-size: 22px;
-            color: var(--primary);
+            font-size: 24px;
+            color: var(--dark);
             margin-bottom: 15px;
         }
         
@@ -99,8 +122,8 @@
             color: white;
             border: none;
             border-radius: 50px;
-            padding: 14px 24px;
-            font-size: 16px;
+            padding: 16px 24px;
+            font-size: 17px;
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
@@ -109,40 +132,47 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: rgba(255,255,255,0.2);
+            transition: var(--transition);
+            z-index: -1;
+        }
+        
+        .btn:hover::before {
+            width: 100%;
         }
         
         .btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
         
         .btn:active {
-            transform: translateY(0);
+            transform: translateY(1px);
         }
         
         .btn-danger {
             background: var(--danger);
         }
         
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-        
         .btn-success {
             background: var(--success);
         }
         
-        .btn-success:hover {
-            background: #27ae60;
-        }
-        
         .btn-warning {
             background: var(--warning);
-        }
-        
-        .btn-warning:hover {
-            background: #e67e22;
         }
         
         .btn-secondary {
@@ -155,8 +185,9 @@
         }
         
         .btn-small {
-            padding: 8px 16px;
-            font-size: 14px;
+            padding: 12px 18px;
+            font-size: 15px;
+            border-radius: 12px;
         }
         
         .input-group {
@@ -167,16 +198,19 @@
         
         input {
             flex: 1;
-            padding: 14px;
+            padding: 14px 18px;
             border: 2px solid #e0e0e0;
             border-radius: var(--radius);
             font-size: 16px;
             transition: var(--transition);
+            background: #f8f9fa;
         }
         
         input:focus {
             border-color: var(--primary);
             outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
         }
         
         .player-list {
@@ -189,11 +223,13 @@
         .player-tag {
             background: var(--secondary);
             border-radius: 50px;
-            padding: 8px 16px;
+            padding: 10px 18px;
             display: flex;
             align-items: center;
             gap: 8px;
             font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
         }
         
         .remove-player {
@@ -201,25 +237,40 @@
             border: none;
             color: var(--danger);
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+        
+        .remove-player:hover {
+            background: rgba(230, 57, 70, 0.1);
         }
         
         .counter {
             display: flex;
             align-items: center;
-            gap: 15px;
+            justify-content: space-between;
             margin-bottom: 20px;
             background: var(--secondary);
-            padding: 15px;
+            padding: 15px 20px;
             border-radius: var(--radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .counter-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         
         .counter-btn {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: var(--primary);
             color: white;
@@ -230,6 +281,7 @@
             justify-content: center;
             cursor: pointer;
             transition: var(--transition);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
         .counter-btn:hover {
@@ -241,15 +293,16 @@
             font-weight: bold;
             min-width: 40px;
             text-align: center;
+            color: var(--dark);
         }
         
         .card {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            background: var(--card-gradient);
             color: white;
             border-radius: var(--radius);
             padding: 30px;
             text-align: center;
-            min-height: 300px;
+            min-height: 320px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -259,6 +312,21 @@
             perspective: 1000px;
             position: relative;
             overflow: hidden;
+        }
+        
+        .card.spy {
+            background: var(--spy-gradient);
+        }
+        
+        .card::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none;
         }
         
         .card-inner {
@@ -301,13 +369,14 @@
             font-size: 18px;
             margin-bottom: 20px;
             line-height: 1.5;
+            max-width: 90%;
         }
         
         .spy-text {
-            color: #ff4d4d;
-            font-size: 32px;
+            color: #ffccd5;
+            font-size: 36px;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            text-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
             animation: pulse 2s infinite;
         }
         
@@ -320,6 +389,13 @@
         .spy-icon {
             font-size: 64px;
             margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
         }
         
         .location-list {
@@ -329,16 +405,25 @@
             background: var(--secondary);
             border-radius: var(--radius);
             padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
         }
         
         .location-item {
             padding: 12px;
-            border-bottom: 1px solid #ddd;
-            font-size: 16px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: var(--transition);
         }
         
-        .location-item:last-child {
-            border-bottom: none;
+        .location-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: #e9f5ff;
         }
         
         .voting-list {
@@ -355,6 +440,13 @@
             background: var(--secondary);
             border-radius: var(--radius);
             padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: var(--transition);
+        }
+        
+        .player-vote-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
         .vote-buttons {
@@ -367,7 +459,7 @@
         }
         
         .result-icon {
-            font-size: 64px;
+            font-size: 72px;
             margin: 20px 0;
         }
         
@@ -375,8 +467,9 @@
             margin-top: auto;
             text-align: center;
             padding: 20px 0;
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.8);
             font-size: 14px;
+            width: 100%;
         }
         
         .bug-report {
@@ -384,12 +477,17 @@
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             margin-top: 10px;
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50px;
+            transition: var(--transition);
         }
         
         .bug-report:hover {
-            text-decoration: underline;
+            background: rgba(0,0,0,0.3);
+            transform: translateY(-2px);
         }
         
         .modal {
@@ -398,7 +496,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -420,10 +518,11 @@
             max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
-            padding: 24px;
+            padding: 30px;
             position: relative;
             transform: translateY(20px);
             transition: var(--transition);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
         
         .modal.active .modal-content {
@@ -439,12 +538,24 @@
             font-size: 24px;
             cursor: pointer;
             color: #999;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .close-modal:hover {
+            background: #f0f0f0;
+            color: #333;
         }
         
         .progress-bar {
-            height: 8px;
+            height: 10px;
             background: #e0e0e0;
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
             margin-top: 10px;
         }
@@ -452,17 +563,139 @@
         .progress {
             height: 100%;
             background: var(--primary);
-            border-radius: 4px;
+            border-radius: 5px;
             transition: width 0.4s ease;
         }
         
         .instruction {
-            background: #f9f9f9;
+            background: #f0f9ff;
             border-left: 4px solid var(--primary);
-            padding: 12px 15px;
+            padding: 15px;
             border-radius: 0 var(--radius) var(--radius) 0;
             margin: 15px 0;
             font-size: 14px;
+        }
+        
+        .logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--card-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            animation: rotate 15s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .logo-icon {
+            font-size: 50px;
+            color: white;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature-item {
+            background: #f0f9ff;
+            border-radius: var(--radius);
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .presets-section {
+            margin: 20px 0;
+            padding-top: 20px;
+            border-top: 2px dashed #e0e0e0;
+        }
+        
+        .presets-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .preset-item {
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid #e0e0e0;
+        }
+        
+        .preset-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+        
+        .preset-item h4 {
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+        
+        .preset-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .preset-empty {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+        
+        @media (max-width: 480px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .location-list {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            
+            .presets-buttons {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 28px;
+            }
         }
     </style>
 </head>
@@ -470,12 +703,16 @@
     <div class="container">
         <!-- Главный экран -->
         <div id="main-screen" class="screen active">
-            <div class="header">
-                <h1>🕵️ Шпион</h1>
-                <p>Увлекательная игра на логику и общение</p>
+            <div class="logo">
+                <div class="logo-circle">
+                    <i class="fas fa-user-secret logo-icon"></i>
+                </div>
             </div>
             
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Crect fill='%232481cc' width='400' height='200'/%3E%3Ccircle fill='%23f0f0f0' cx='200' cy='100' r='60'/%3E%3Cpath fill='%232c3e50' d='M180,90 Q200,70 220,90 Q210,100 220,110 Q200,130 180,110 Q190,100 180,90'/%3E%3C/svg%3E" alt="Spy Game" style="width: 100%; border-radius: var(--radius); margin: 15px 0;">
+            <div class="header">
+                <h1>🕵️ Игра "Шпион"</h1>
+                <p>Увлекательная игра на логику и общение для компании</p>
+            </div>
             
             <div class="instruction">
                 <p><strong>Как играть:</strong></p>
@@ -485,57 +722,91 @@
                 <p>4. Обсуждайте и выявляйте шпионов!</p>
             </div>
             
+            <div class="features">
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-users"></i></div>
+                    <p>Для 3-15 игроков</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <p>60+ уникальных локаций</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-clock"></i></div>
+                    <p>Быстрая настройка</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-save"></i></div>
+                    <p>Сохранение пресетов</p>
+                </div>
+            </div>
+            
             <button id="new-game-btn" class="btn">
-                🎮 Начать новую игру
+                <i class="fas fa-play"></i> Начать новую игру
             </button>
         </div>
         
         <!-- Экран настройки -->
         <div id="setup-screen" class="screen">
             <div class="header">
-                <h2>Настройка игры</h2>
+                <h2><i class="fas fa-cog"></i> Настройка игры</h2>
                 <p>Добавьте игроков и выберите количество шпионов</p>
             </div>
             
             <div>
-                <h3>Добавить игрока</h3>
+                <h3><i class="fas fa-user-plus"></i> Добавить игрока</h3>
                 <div class="input-group">
                     <input type="text" id="player-name" placeholder="Имя игрока">
-                    <button id="add-player-btn" class="btn btn-small">Добавить</button>
+                    <button id="add-player-btn" class="btn btn-small"><i class="fas fa-plus"></i> Добавить</button>
                 </div>
                 
                 <div id="players-container">
-                    <h3>Игроки:</h3>
+                    <h3><i class="fas fa-users"></i> Игроки:</h3>
                     <div id="player-list" class="player-list"></div>
                 </div>
             </div>
             
             <div>
-                <h3>Количество шпионов:</h3>
+                <h3><i class="fas fa-user-secret"></i> Количество шпионов:</h3>
                 <div class="counter">
-                    <button id="spy-minus" class="counter-btn">-</button>
-                    <div id="spy-count" class="counter-value">1</div>
-                    <button id="spy-plus" class="counter-btn">+</button>
+                    <span>Выберите количество:</span>
+                    <div class="counter-controls">
+                        <button id="spy-minus" class="counter-btn">-</button>
+                        <div id="spy-count" class="counter-value">1</div>
+                        <button id="spy-plus" class="counter-btn">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="presets-section">
+                <h3><i class="fas fa-save"></i> Управление пресетами</h3>
+                <div class="presets-buttons">
+                    <button id="save-preset-btn" class="btn btn-secondary">
+                        <i class="fas fa-save"></i> Сохранить пресет
+                    </button>
+                    <button id="load-preset-btn" class="btn btn-secondary">
+                        <i class="fas fa-folder-open"></i> Загрузить пресет
+                    </button>
                 </div>
             </div>
             
             <button id="view-locations-btn" class="btn btn-secondary">
-                📋 Посмотреть возможные локации
+                <i class="fas fa-map-marked-alt"></i> Посмотреть возможные локации
             </button>
             
             <button id="start-game-btn" class="btn btn-success" disabled>
-                🚀 Начать игру
+                <i class="fas fa-play"></i> Начать игру
             </button>
             
             <button id="back-to-main-btn" class="btn btn-secondary">
-                ↩️ На главную
+                <i class="fas fa-arrow-left"></i> На главную
             </button>
         </div>
         
         <!-- Экран игры -->
         <div id="game-screen" class="screen">
             <div class="header">
-                <h2>Ход игрока</h2>
+                <h2><i class="fas fa-gamepad"></i> Ход игрока</h2>
                 <p>Передайте устройство игроку</p>
             </div>
             
@@ -543,14 +814,14 @@
                 <div id="progress" class="progress" style="width: 0%"></div>
             </div>
             
-            <h3 id="current-player">Игрок 1</h3>
+            <h3 id="current-player"><i class="fas fa-user"></i> Игрок 1</h3>
             
             <div id="game-card" class="card">
                 <div class="card-inner">
                     <div class="card-front">
                         <div class="card-title">Ваша роль</div>
                         <div class="card-text">Нажмите на карту, чтобы узнать, кто вы - мирный житель или шпион</div>
-                        <div class="spy-icon">🕵️</div>
+                        <div class="spy-icon"><i class="fas fa-user-secret"></i></div>
                         <div class="card-text">После просмотра нажмите снова, чтобы передать ход</div>
                     </div>
                     <div class="card-back">
@@ -562,37 +833,37 @@
             </div>
             
             <button id="next-player-btn" class="btn" style="display: none;">
-                👉 Передать следующему игроку
+                <i class="fas fa-arrow-right"></i> Передать следующему игроку
             </button>
             
             <button id="back-to-setup-btn" class="btn btn-secondary">
-                ↩️ Вернуться к настройкам
+                <i class="fas fa-arrow-left"></i> Вернуться к настройкам
             </button>
         </div>
         
         <!-- Экран голосования -->
         <div id="voting-screen" class="screen">
             <div class="header">
-                <h2>Обсуждение завершено</h2>
+                <h2><i class="fas fa-vote-yea"></i> Голосование</h2>
                 <p>Выберите игрока, которого подозреваете в шпионаже</p>
             </div>
             
             <div id="voting-container">
-                <h3>Игроки:</h3>
+                <h3><i class="fas fa-users"></i> Игроки:</h3>
                 <div id="voting-list" class="voting-list">
                     <!-- Список игроков для голосования будет здесь -->
                 </div>
             </div>
             
             <button id="back-to-game-btn" class="btn btn-secondary" style="display: none;">
-                ↩️ Вернуться к обсуждению
+                <i class="fas fa-arrow-left"></i> Вернуться к обсуждению
             </button>
         </div>
         
         <!-- Экран результатов -->
         <div id="result-screen" class="screen">
             <div class="header result-screen">
-                <h2 id="result-title">Результат голосования</h2>
+                <h2 id="result-title"><i class="fas fa-trophy"></i> Результат голосования</h2>
                 <p id="result-description">Описание результата</p>
             </div>
             
@@ -603,11 +874,11 @@
             <div id="game-result"></div>
             
             <button id="play-again-btn" class="btn btn-success">
-                🔄 Играть снова
+                <i class="fas fa-redo"></i> Играть снова
             </button>
             
             <button id="back-to-main-result-btn" class="btn btn-secondary">
-                ↩️ На главную
+                <i class="fas fa-home"></i> На главную
             </button>
         </div>
     </div>
@@ -616,21 +887,36 @@
     <div id="locations-modal" class="modal">
         <div class="modal-content">
             <button class="close-modal">&times;</button>
-            <h2>Возможные локации</h2>
+            <h2><i class="fas fa-map-marked-alt"></i> Возможные локации</h2>
             <p>Одна из этих локаций будет выбрана случайным образом</p>
             
             <div id="locations-list" class="location-list">
                 <!-- Список локаций будет здесь -->
             </div>
             
-            <button class="btn close-modal-btn">Закрыть</button>
+            <button class="btn close-modal-btn"><i class="fas fa-times"></i> Закрыть</button>
+        </div>
+    </div>
+    
+    <!-- Модальное окно пресетов -->
+    <div id="presets-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <h2><i class="fas fa-folder-open"></i> Выберите пресет</h2>
+            <p>Загрузите сохраненную конфигурацию игры</p>
+            
+            <div id="presets-list" class="location-list">
+                <!-- Список пресетов будет здесь -->
+            </div>
+            
+            <button class="btn close-modal-btn"><i class="fas fa-times"></i> Закрыть</button>
         </div>
     </div>
     
     <div class="footer">
         <p>Шпион - Игра для веселой компании</p>
         <a href="https://t.me/Pluh5" class="bug-report" target="_blank">
-            <span>Нашёл баг? Сообщить</span>
+            <i class="fas fa-bug"></i> Нашёл баг? Сообщить
         </a>
     </div>
 
@@ -638,13 +924,17 @@
         // Данные игры
         const locations = [
             "Казино", "Кладбище", "Круизный лайнер", "Самолёт", "Отель",
-            "Забегаловка", "Ресторан", "Тренажерный Зал", "Космическая Станция", "Стадион",
+            "Кафе", "Ресторан", "Тренажерный Зал", "Космическая Станция", "Стадион",
             "Стройплощадка", "Тюрьма", "Выставка кошек", "Пиратский корабль", "Торговый центр",
             "Бассейн", "Кинотеатр", "Киностудия", "Церковь", "Ночной Клуб",
             "Спа-салон", "Школа", "Полицейский участок", "Подводная лодка", "Цирк",
             "Лунапарк", "Посольство", "Карнавал", "Пляж", "Воинская часть",
             "Университет", "Больница", "Театр", "Зоопарк", "Пассажирский Поезд",
-            "Корпоративная вечеринка", "Шахта", "Рок-концерт", "Библиотека", "Свадьба", "Парламент"
+            "Корпоративная вечеринка", "Шахта", "Рок-концерт", "Библиотека", "Свадьба", "Парламент",
+            "Супермаркет", "Ферма", "Вокзал", "Музей", "Парк",
+            "Сад", "Поляна", "Автобус", "Корабль", "Аэропорт",
+            "Киоск", "Банк", "Аптека", "Парикмахерская", "Книжный магазин",
+            "Детская площадка", "Площадь", "Мост", "Подземелье", "Планетарий"
         ];
         
         // Состояние игры
@@ -655,7 +945,8 @@
             currentPlayerIndex: 0,
             roles: {},
             gameStarted: false,
-            votedPlayers: new Set()
+            votedPlayers: new Set(),
+            spies: []
         };
         
         // Элементы DOM
@@ -706,8 +997,13 @@
             });
             
             // Закрытие модального окна
-            document.querySelector('.close-modal').addEventListener('click', closeModal);
-            document.querySelector('.close-modal-btn').addEventListener('click', closeModal);
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', closeModal);
+            });
+            
+            document.querySelectorAll('.close-modal-btn').forEach(btn => {
+                btn.addEventListener('click', closeModal);
+            });
             
             // Начало игры
             document.getElementById('start-game-btn').addEventListener('click', startGame);
@@ -718,6 +1014,10 @@
             
             // Голосование
             document.getElementById('play-again-btn').addEventListener('click', resetGame);
+            
+            // Пресеты
+            document.getElementById('save-preset-btn').addEventListener('click', savePreset);
+            document.getElementById('load-preset-btn').addEventListener('click', showPresetsModal);
         }
         
         // Функции игры
@@ -733,6 +1033,9 @@
                 
                 // Активируем кнопку "Начать игру" если есть игроки
                 document.getElementById('start-game-btn').disabled = gameState.players.length < 2;
+                
+                // Обновляем максимальное количество шпионов
+                updateSpyCount(0);
             }
         }
         
@@ -742,6 +1045,9 @@
             
             // Деактивируем кнопку "Начать игру" если меньше 2 игроков
             document.getElementById('start-game-btn').disabled = gameState.players.length < 2;
+            
+            // Обновляем количество шпионов
+            updateSpyCount(0);
         }
         
         function renderPlayerList() {
@@ -753,7 +1059,7 @@
                 playerTag.className = 'player-tag';
                 playerTag.innerHTML = `
                     <span>${player}</span>
-                    <button class="remove-player" onclick="removePlayer('${player}')">×</button>
+                    <button class="remove-player" onclick="removePlayer('${player}')">&times;</button>
                 `;
                 playerList.appendChild(playerTag);
             });
@@ -772,6 +1078,7 @@
         
         function closeModal() {
             document.getElementById('locations-modal').classList.remove('active');
+            document.getElementById('presets-modal').classList.remove('active');
         }
         
         function startGame() {
@@ -785,19 +1092,24 @@
             
             // Распределение ролей
             gameState.roles = {};
-            const spyIndexes = [];
+            gameState.spies = [];
             
             // Выбираем случайных шпионов
-            while (spyIndexes.length < gameState.spiesCount) {
+            while (gameState.spies.length < gameState.spiesCount) {
                 const randomIndex = Math.floor(Math.random() * gameState.players.length);
-                if (!spyIndexes.includes(randomIndex)) {
-                    spyIndexes.push(randomIndex);
+                const player = gameState.players[randomIndex];
+                
+                if (!gameState.spies.includes(player)) {
+                    gameState.spies.push(player);
+                    gameState.roles[player] = 'spy';
                 }
             }
             
-            // Назначаем роли
-            gameState.players.forEach((player, index) => {
-                gameState.roles[player] = spyIndexes.includes(index) ? 'spy' : 'citizen';
+            // Назначаем роли остальным игрокам
+            gameState.players.forEach(player => {
+                if (!gameState.spies.includes(player)) {
+                    gameState.roles[player] = 'citizen';
+                }
             });
             
             gameState.currentPlayerIndex = 0;
@@ -822,12 +1134,13 @@
             // Сбросить карту
             const card = document.getElementById('game-card');
             card.classList.remove('flipped');
+            card.classList.remove('spy');
             
             // Установить контент для роли
             const roleContent = document.getElementById('role-content');
             if (gameState.roles[currentPlayer] === 'spy') {
                 roleContent.innerHTML = `
-                    <div class="spy-icon">🕵️</div>
+                    <div class="spy-icon"><i class="fas fa-user-secret"></i></div>
                     <div class="spy-text">ТЫ ШПИОН!</div>
                     <div class="card-text">Ты не знаешь локацию. Выдавай себя за мирного!</div>
                 `;
@@ -842,7 +1155,13 @@
         
         function flipCard() {
             const card = document.getElementById('game-card');
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            const isSpy = gameState.roles[currentPlayer] === 'spy';
+            
             card.classList.add('flipped');
+            if (isSpy) {
+                card.classList.add('spy');
+            }
             
             // Показать кнопку "Передать следующему"
             document.getElementById('next-player-btn').style.display = 'block';
@@ -867,9 +1186,11 @@
                 const playerItem = document.createElement('div');
                 playerItem.className = 'player-vote-item';
                 playerItem.innerHTML = `
-                    <span>${player}</span>
+                    <span><i class="fas fa-user"></i> ${player}</span>
                     <div class="vote-buttons">
-                        <button class="btn btn-small btn-danger" data-player="${player}">Выгнать</button>
+                        <button class="btn btn-small btn-danger" data-player="${player}">
+                            <i class="fas fa-user-slash"></i> Выгнать
+                        </button>
                     </div>
                 `;
                 votingList.appendChild(playerItem);
@@ -878,7 +1199,7 @@
             // Добавляем обработчики для кнопок голосования
             document.querySelectorAll('.btn-danger').forEach(button => {
                 button.addEventListener('click', (e) => {
-                    const player = e.target.getAttribute('data-player');
+                    const player = e.target.closest('button').getAttribute('data-player');
                     votePlayerOut(player);
                 });
             });
@@ -892,10 +1213,13 @@
             gameState.votedPlayers.add(player);
             
             const isSpy = gameState.roles[player] === 'spy';
-            const remainingSpies = Object.values(gameState.roles).filter(role => role === 'spy' && !gameState.votedPlayers.has(player)).length;
             
-            // Обновляем состояние игры
-            gameState.roles[player] = 'voted-out';
+            if (isSpy) {
+                // Удаляем шпиона из списка
+                gameState.spies = gameState.spies.filter(spy => spy !== player);
+            }
+            
+            const remainingSpies = gameState.spies.length;
             
             // Показываем результат голосования
             showResultScreen(player, isSpy, remainingSpies);
@@ -911,7 +1235,7 @@
                 resultTitle.textContent = `Шпион обнаружен!`;
                 resultDescription.textContent = `${player} был шпионом!`;
                 resultContent.innerHTML = `
-                    <div class="result-icon">🕵️</div>
+                    <div class="result-icon"><i class="fas fa-user-secret"></i></div>
                     <h3>${player} - Шпион</h3>
                     <p>Игроки вычислили шпиона!</p>
                 `;
@@ -919,14 +1243,14 @@
                 if (remainingSpies === 0) {
                     gameResult.innerHTML = `
                         <div class="instruction" style="background: #d4edda; border-color: #28a745;">
-                            <h3>🎉 Победа мирных жителей!</h3>
+                            <h3><i class="fas fa-trophy"></i> Победа мирных жителей!</h3>
                             <p>Все шпионы найдены! Мирные жители победили!</p>
                         </div>
                     `;
                 } else {
                     gameResult.innerHTML = `
                         <div class="instruction">
-                            <h3>Игра продолжается!</h3>
+                            <h3><i class="fas fa-play-circle"></i> Игра продолжается!</h3>
                             <p>Осталось шпионов: ${remainingSpies}</p>
                             <p>Продолжайте обсуждение и ищите оставшихся шпионов</p>
                         </div>
@@ -944,14 +1268,14 @@
                 resultTitle.textContent = `Ошибка!`;
                 resultDescription.textContent = `${player} был мирным жителем!`;
                 resultContent.innerHTML = `
-                    <div class="result-icon">😢</div>
+                    <div class="result-icon"><i class="fas fa-user"></i></div>
                     <h3>${player} - Мирный житель</h3>
                     <p>Игроки ошиблись и выгнали невиновного!</p>
                 `;
                 
                 gameResult.innerHTML = `
                     <div class="instruction" style="background: #f8d7da; border-color: #dc3545;">
-                        <h3>💥 Шпионы победили!</h3>
+                        <h3><i class="fas fa-skull"></i> Шпионы победили!</h3>
                         <p>Поскольку мирный житель был изгнан, шпионы одержали победу!</p>
                     </div>
                 `;
@@ -968,6 +1292,7 @@
             gameState.roles = {};
             gameState.gameStarted = false;
             gameState.votedPlayers.clear();
+            gameState.spies = [];
             
             // Сброс UI
             document.getElementById('player-list').innerHTML = '';
@@ -991,6 +1316,70 @@
             
             // Закрыть модальное окно при переключении экранов
             closeModal();
+        }
+        
+        // Функции для работы с пресетами
+        function savePreset() {
+            if (gameState.players.length === 0) {
+                alert('Добавьте игроков, чтобы сохранить пресет!');
+                return;
+            }
+            
+            const presetName = prompt('Введите название для пресета:');
+            if (!presetName) return;
+            
+            const presets = JSON.parse(localStorage.getItem('spy_presets') || "{}");
+            const presetsObj = typeof presets === 'string' ? JSON.parse(presets) : presets;
+            
+            presetsObj[presetName] = {
+                players: [...gameState.players],
+                spiesCount: gameState.spiesCount
+            };
+            
+            localStorage.setItem('spy_presets', JSON.stringify(presetsObj));
+            alert(`Пресет "${presetName}" успешно сохранен!`);
+        }
+        
+        function showPresetsModal() {
+            const presetsList = document.getElementById('presets-list');
+            presetsList.innerHTML = '';
+            
+            const presets = JSON.parse(localStorage.getItem('spy_presets') || "{}");
+            const presetsObj = typeof presets === 'string' ? JSON.parse(presets) : presets;
+            
+            if (Object.keys(presetsObj).length === 0) {
+                presetsList.innerHTML = '<div class="preset-empty">У вас пока нет сохраненных пресетов</div>';
+            } else {
+                for (const [name, preset] of Object.entries(presetsObj)) {
+                    const presetItem = document.createElement('div');
+                    presetItem.className = 'preset-item';
+                    presetItem.innerHTML = `
+                        <h4>${name}</h4>
+                        <div class="preset-info">
+                            <span>Игроков: ${preset.players.length}</span>
+                            <span>Шпионов: ${preset.spiesCount}</span>
+                        </div>
+                    `;
+                    presetItem.addEventListener('click', () => {
+                        loadPreset(name, preset);
+                        closeModal();
+                    });
+                    presetsList.appendChild(presetItem);
+                }
+            }
+            
+            document.getElementById('presets-modal').classList.add('active');
+        }
+        
+        function loadPreset(name, preset) {
+            gameState.players = [...preset.players];
+            gameState.spiesCount = preset.spiesCount;
+            
+            renderPlayerList();
+            document.getElementById('spy-count').textContent = preset.spiesCount;
+            document.getElementById('start-game-btn').disabled = gameState.players.length < 2;
+            
+            alert(`Пресет "${name}" успешно загружен!`);
         }
     </script>
 </body>
